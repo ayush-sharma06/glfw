@@ -2,6 +2,94 @@ cmake_minimum_required(VERSION 3.16...3.28 FATAL_ERROR)
 
 project(GLFW VERSION 3.5.0 LANGUAGES C HOMEPAGE_URL "https://www.glfw.org/")
 
+#------------edited----------------------------
+set(GLFW_LIBRARY_TYPE STATIC)
+
+if(NOT DEFINED OUTPUT_DIR)
+    set(OUTPUT_DIR ${CMAKE_BUILD_TYPE})
+endif()
+
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${OUTPUT_DIR}/${PROJECT_NAME}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${OUTPUT_DIR}/${PROJECT_NAME}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin/${OUTPUT_DIR}/${PROJECT_NAME}")
+
+# Define the common files
+set(GLFW_COMMON_FILES
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/GLFW/glfw3.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/GLFW/glfw3native.h"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/context.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/init.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/input.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/monitor.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/null_init.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/null_joystick.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/null_monitor.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/null_window.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/platform.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/vulkan.c"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/window.c"
+)
+
+# Platform-specific source files and definitions.
+if(UNIX AND NOT APPLE)
+    set(GLFW_PLATFORM_FILES
+        "src/x11_init.c"
+        "src/x11_monitor.c"
+        "src/x11_window.c"
+        "src/xkb_unicode.c"
+        "src/posix_module.c"
+        "src/posix_time.c"
+        "src/posix_thread.c"
+        "src/glx_context.c"
+        "src/egl_context.c"
+        "src/osmesa_context.c"
+        "src/linux_joystick.c"
+    )
+    add_definitions(-D_GLFW_X11)
+elseif(APPLE)
+    set(GLFW_PLATFORM_FILES
+        "src/cocoa_init.m"
+        "src/cocoa_monitor.m"
+        "src/cocoa_window.m"
+        "src/cocoa_joystick.m"
+        "src/cocoa_time.c"
+        "src/nsgl_context.m"
+        "src/posix_thread.c"
+        "src/posix_module.c"
+        "src/osmesa_context.c"
+        "src/egl_context.c"
+    )
+    add_definitions(-D_GLFW_COCOA)
+elseif(WIN32)
+    set(GLFW_PLATFORM_FILES
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/win32_init.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/win32_joystick.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/win32_module.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/win32_monitor.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/win32_time.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/win32_thread.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/win32_window.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/wgl_context.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/egl_context.c"
+        "${CMAKE_CURRENT_SOURCE_DIR}/src/osmesa_context.c"
+    )
+    add_definitions(-D_GLFW_WIN32 -D_CRT_SECURE_NO_WARNINGS)
+endif()
+
+# Combine all files.
+set(GLFW_FILES ${GLFW_COMMON_FILES} ${GLFW_PLATFORM_FILES})
+
+# Create the GLFW library target.
+add_library(GLFW ${GLFW_LIBRARY_TYPE} ${GLFW_FILES})
+
+# Set some target properties (optional, as needed)
+target_include_directories(GLFW PUBLIC
+    "${CMAKE_CURRENT_SOURCE_DIR}/include"
+)
+
+
+#----------------------------------------------
+
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 
 string(COMPARE EQUAL "${CMAKE_CURRENT_SOURCE_DIR}" "${CMAKE_SOURCE_DIR}" GLFW_STANDALONE)
